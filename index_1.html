@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Escaneaste sin mirar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: una columna. Primero un aviso de datos al estilo de las cookies; después el expediente del visitante, la vista simulada de un atacante, la lección y el material. */
+:root {
+  --bg: #F3F5FA;
+  --surface: #FFFFFF;
+  --ink: #14213D;
+  --muted: #4A5670;
+  --line: #D9DEEA;
+  --accent: #1D4ED8;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #E4EBFC;
+  --warn: #B4400C;
+  --warn-soft: #FBE9DD;
+  --ok: #0F766E;
+  --ok-soft: #E3F1EC;
+  --term-bg: #0B1020;
+  --term-ink: #CFE3FF;
+  --term-dim: #7F8FB0;
+  --term-hot: #FFB784;
+  --term-ok: #7BE0C8;
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1526; --surface: #17203A; --ink: #EEF1F8; --muted: #A8B3CC; --line: #2A3555;
+    --accent: #8FB0FF; --accent-ink: #0E1526; --accent-soft: #1C2B57; --warn: #FFAA7A; --warn-soft: #3A2417;
+    --ok: #6FD3C3; --ok-soft: #12332F; --term-bg: #060A16; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1526; --surface: #17203A; --ink: #EEF1F8; --muted: #A8B3CC; --line: #2A3555;
+  --accent: #8FB0FF; --accent-ink: #0E1526; --accent-soft: #1C2B57; --warn: #FFAA7A; --warn-soft: #3A2417;
+  --ok: #6FD3C3; --ok-soft: #12332F; --term-bg: #060A16; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 18px; line-height: 1.55; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2 { text-wrap: balance; line-height: 1.12; }
+h1 { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 700; }
+p { max-width: 62ch; }
+section { display: flex; flex-direction: column; gap: 16px; }
+.eyebrow { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warn); }
+.hero { display: flex; flex-direction: column; gap: 16px; }
+.lede { font-size: 1.25rem; color: var(--muted); }
+.badge { display: inline-block; align-self: flex-start; background: var(--ok-soft); color: var(--ok); font-weight: 700; font-size: 0.95rem; padding: 6px 16px; border-radius: 999px; }
+.note { color: var(--muted); font-size: 0.95rem; }
+.btn { display: inline-block; align-self: flex-start; background: var(--accent); color: var(--accent-ink); font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 12px; border: 0; font: inherit; font-weight: 700; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); padding: 12px 22px; font-weight: 500; }
+.btn:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* Aviso de datos, al estilo de las cookies */
+.gate { background: #FFFDF9; border: 1px solid #EFE6DA; border-radius: 28px; padding: 32px 28px; gap: 16px; box-shadow: 0 18px 44px rgba(120, 90, 60, 0.12); text-align: center; align-items: center; }
+.gate .cookie { font-size: 2.4rem; margin: 0; }
+.gate h1 { font-size: clamp(1.5rem, 5vw, 1.9rem); color: #3A3128; }
+.gate p { color: #6B5F52; }
+.gate .actions { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.gate .btn { align-self: stretch; text-align: center; background: #F2A07B; color: #3A1F10; border-radius: 999px; padding: 15px 26px; }
+.gate .link { background: none; border: 0; font: inherit; font-size: 0.85rem; color: #A89B8C; text-decoration: underline; cursor: pointer; padding: 6px; }
+.gate details { border-top: 1px solid #EFE6DA; padding-top: 14px; color: #8A7D6E; font-size: 0.85rem; text-align: left; width: 100%; }
+.gate summary { cursor: pointer; font-weight: 500; color: #A89B8C; text-align: center; }
+.gate ul { padding-left: 1.2em; margin: 10px 0 0; display: flex; flex-direction: column; gap: 6px; }
+
+.dossier { background: var(--term-bg); color: var(--term-ink); border-radius: 18px; padding: 20px 22px 24px; font-family: var(--font-mono); font-size: 0.88rem; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 30px rgba(8, 12, 30, 0.25); }
+.dossier .bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--term-dim); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid #1F2A4A; margin-bottom: 8px; }
+.line { display: flex; flex-wrap: wrap; gap: 2px 14px; padding: 6px 0; opacity: 0; transform: translateY(4px); animation: show 0.35s ease forwards; }
+.line .k { color: var(--term-dim); flex: 0 0 11.5em; min-width: 0; }
+.line .v { color: var(--term-ink); font-weight: 600; flex: 1 1 12em; min-width: 0; overflow-wrap: anywhere; }
+.line.hot .v { color: var(--term-hot); }
+.print { margin-top: 10px; padding-top: 14px; border-top: 1px dashed #26335A; display: flex; flex-direction: column; gap: 6px; opacity: 0; animation: show 0.5s ease forwards; }
+.print .k { color: var(--term-dim); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.print .hash { color: var(--term-ok); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.06em; overflow-wrap: anywhere; }
+.print .after { color: var(--term-ink); font-family: var(--font-body); font-size: 0.98rem; }
+.cursor { display: inline-block; width: 0.6em; height: 1.05em; background: var(--term-ok); vertical-align: text-bottom; animation: blink 1s steps(2) infinite; }
+@keyframes show { to { opacity: 1; transform: none; } }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .line, .print { animation-duration: 0.01s; animation-delay: 0s !important; }
+  .cursor { animation: none; }
+}
+
+.attacker { display: flex; flex-direction: column; gap: 18px; }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.tablewrap table { border-collapse: collapse; width: 100%; min-width: 520px; font-family: var(--font-mono); font-size: 0.8rem; }
+.tablewrap th, .tablewrap td { text-align: left; padding: 10px 14px; border-top: 1px solid var(--line); white-space: nowrap; }
+.tablewrap th { color: var(--muted); font-weight: 600; border-top: none; }
+.tablewrap tr.me td { background: var(--warn-soft); color: var(--ink); font-weight: 600; }
+.bars { display: flex; flex-direction: column; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.bars h3 { font-size: 0.95rem; color: var(--muted); font-weight: 600; }
+.bar { display: grid; grid-template-columns: 8.5em 1fr 2em; gap: 10px; align-items: center; font-size: 0.9rem; }
+.bar i { display: block; height: 12px; border-radius: 6px; background: var(--accent); }
+.bar span:last-child { text-align: right; font-family: var(--font-mono); }
+.phish { background: var(--warn-soft); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.phish h3 { font-size: 0.95rem; color: var(--warn); }
+.phish blockquote { margin: 0; font-size: 1rem; line-height: 1.5; }
+.phish p { font-size: 0.92rem; color: var(--muted); }
+
+.lesson { background: var(--warn-soft); border-radius: 20px; padding: 28px; gap: 14px; }
+.lesson h2 { color: var(--ink); }
+.lesson ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.card { background: var(--warn-soft); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card h3 { font-size: 1.05rem; line-height: 1.25; }
+.card p { font-size: 0.97rem; color: var(--muted); }
+.checks { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.checks li { display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
+.checks input { margin-top: 5px; width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+.checks label { cursor: pointer; min-width: 0; }
+.checks b { display: block; }
+.checks span { color: var(--muted); font-size: 0.95rem; }
+.material { background: var(--accent-soft); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.pending { background: var(--surface); border: 1px dashed var(--muted); border-radius: 12px; padding: 14px 18px; color: var(--muted); font-size: 0.95rem; }
+</style>
+
+<style>html{color-scheme:light dark}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<main>
+  <section class="gate" id="gate" hidden aria-labelledby="gt">
+    <p class="cookie" aria-hidden="true">🍪</p>
+    <h1 id="gt" tabindex="-1">Queremos que tu visita sea mejor</h1>
+    <p>Para ofrecerte una experiencia más personalizada y darte acceso a los contenidos, usamos tus datos de navegación junto con nuestros socios. Al continuar aceptas nuestras condiciones.</p>
+    <div class="actions">
+      <button class="btn" id="accept" type="button">Aceptar todo y continuar</button>
+      <button class="link" id="reject" type="button">Rechazar</button>
+    </div>
+    <details>
+      <summary>Configurar preferencias</summary>
+      <ul>
+        <li>Qué se guarda: sistema, navegador, idiomas, región, pantalla, procesador, de dónde llegaste y la huella de tu navegador. No se guarda tu nombre ni tu dirección IP.</li>
+        <li>Quién lo recibe: la persona que da esta charla, en una hoja de cálculo.</li>
+        <li>Para qué: una demostración académica de lo que alguien puede hacer con datos así.</li>
+        <li>Por cuánto tiempo: hasta el final de la charla, cuando se borran.</li>
+        <li>Si rechazas: no se envía nada y recibes el material igual.</li>
+      </ul>
+    </details>
+  </section>
+
+  <div id="content" hidden>
+    <header class="hero">
+      <p class="eyebrow">Demostración</p>
+      <h1 id="heroTitle">Acabas de escanear un código sin saber a dónde iba</h1>
+      <p class="lede" id="heroLede">Sin permiso, sin formulario y sin que toques nada, esta página ya sabe esto de ti.</p>
+      <p class="badge" id="heroBadge">Se calcula en tu teléfono. No se envía ni se guarda nada</p>
+    </header>
+
+    <section aria-labelledby="vio">
+      <h2 id="vio">Tu expediente</h2>
+      <div class="dossier" id="dossier" aria-live="polite">
+        <div class="bar"><span>Expediente de visitante</span><span>generado ahora</span></div>
+      </div>
+      <p class="note">Cualquier sitio que abras puede leer estos datos. Un servidor además ve tu dirección IP, que esta página no puede mostrarte ni usa.</p>
+    </section>
+
+    <section aria-labelledby="atk">
+      <h2 id="atk">Así lo vería un atacante que lo hubiera guardado</h2>
+      <p class="note">Simulación en tu teléfono: perfiles ficticios más tu expediente.</p>
+      <div id="attacker" class="attacker"></div>
+    </section>
+
+    <section class="lesson" id="lesson" aria-labelledby="ls">
+      <h2 id="ls">No aceptes por aceptar</h2>
+      <p id="lessonText">Casi todos hacemos clic en «Aceptar» para llegar a lo que queremos. Antes de aceptar, hazte estas preguntas:</p>
+      <ul>
+        <li><b>¿Qué datos piden?</b> Si el aviso no lo dice con claridad, es mala señal.</li>
+        <li><b>¿Quién los recibe y para qué?</b> Un fin concreto es distinto de «mejorar tu experiencia».</li>
+        <li><b>¿Por cuánto tiempo los guardan?</b></li>
+        <li><b>¿Hay un botón claro para rechazar?</b> Si solo existe «Aceptar», desconfía.</li>
+        <li><b>¿Necesito aceptar todo para lo que quiero?</b> Acepta solo lo necesario.</li>
+      </ul>
+    </section>
+
+    <section aria-labelledby="podria">
+      <h2 id="podria">Lo que una página maliciosa habría podido hacer</h2>
+      <div class="cards">
+        <div class="card"><h3>Mostrar un formulario falso</h3><p>Una pantalla que imita un inicio de sesión para quedarse con tu usuario y tu clave.</p></div>
+        <div class="card"><h3>Pedirte que instales algo</h3><p>Una aplicación o un archivo «necesario» que en realidad espía o bloquea tu equipo.</p></div>
+        <div class="card"><h3>Redirigirte en silencio</h3><p>Llevarte a otra dirección que parece la de un servicio conocido y pedirte un pago o un código.</p></div>
+      </div>
+    </section>
+
+    <section aria-labelledby="antes">
+      <h2 id="antes">Antes de escanear un QR</h2>
+      <ul class="checks">
+        <li><input type="checkbox" id="c1"><label for="c1"><b>Mira la dirección antes de abrir</b><span>Casi todas las cámaras muestran el enlace. Léelo completo, no solo el principio.</span></label></li>
+        <li><input type="checkbox" id="c2"><label for="c2"><b>Desconfía de un QR pegado sobre otro</b><span>Los carteles y los menús son fáciles de tapar con un adhesivo.</span></label></li>
+        <li><input type="checkbox" id="c3"><label for="c3"><b>No escribas claves ni datos de pago al entrar por un QR</b><span>Si el servicio es real, entra desde su aplicación o su dirección oficial.</span></label></li>
+        <li><input type="checkbox" id="c4"><label for="c4"><b>No instales nada que te pida una página</b><span>Descarga aplicaciones solo desde la tienda oficial de tu teléfono.</span></label></li>
+        <li><input type="checkbox" id="c5"><label for="c5"><b>Si dudas, pregunta a quien lo compartió</b><span>Confirma por otro canal que el código es suyo.</span></label></li>
+      </ul>
+    </section>
+
+    <section class="material" aria-labelledby="mat">
+      <h2 id="mat">Material de la charla</h2>
+      <p>Documentos de la maestría y la hoja de ruta para empezar en ciberseguridad.</p>
+      <a class="btn" id="materialLink" href="#" target="_blank" rel="noopener" hidden>Abrir el material</a>
+      <p class="pending" id="materialPending">El enlace al material todavía no está configurado.</p>
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  // Enlace de Drive con los documentos. Si queda vacío, se muestra un aviso en su lugar.
+  var MATERIAL_URL = "";
+  // Dirección de la aplicación web de Google Apps Script que recibe los datos de quienes aceptan.
+  // Si queda vacía, la página no pide aceptación y no guarda nada.
+  var COLLECT_URL = "https://script.google.com/macros/s/AKfycbzFjMdZBOT8T5_bzIk86NOkw8JLgI9ZvJicwv03NeTgiPfEfUOA7Aoq0vCUrPv6in-uag/exec";
+
+  function safe(fn, fallback) { try { var v = fn(); return v == null || v === "" ? fallback : v; } catch (e) { return fallback; } }
+  var ua = navigator.userAgent || "";
+  function os() {
+    if (/iPhone|iPad|iPod/i.test(ua)) return "iOS (iPhone o iPad)";
+    if (/Android/i.test(ua)) { var m = ua.match(/Android\s([\d.]+)/); return "Android" + (m ? " " + m[1] : ""); }
+    if (/Macintosh/i.test(ua)) return "macOS";
+    if (/Windows/i.test(ua)) return "Windows";
+    if (/Linux/i.test(ua)) return "Linux";
+    return "No identificado";
+  }
+  function browser() {
+    if (/EdgA?\//.test(ua)) return "Edge";
+    if (/OPR\//.test(ua)) return "Opera";
+    if (/SamsungBrowser/.test(ua)) return "Samsung Internet";
+    if (/Firefox|FxiOS/.test(ua)) return "Firefox";
+    if (/CriOS|Chrome/.test(ua)) return "Chrome";
+    if (/Safari/.test(ua)) return "Safari";
+    return "No identificado";
+  }
+  function canvasSig() {
+    var c = document.createElement("canvas"); c.width = 220; c.height = 40;
+    var x = c.getContext("2d");
+    x.textBaseline = "top"; x.font = "16px Arial"; x.fillStyle = "#f60"; x.fillRect(4, 4, 80, 24);
+    x.fillStyle = "#069"; x.fillText("Escaneaste sin mirar", 8, 8);
+    x.fillStyle = "rgba(102,204,0,0.6)"; x.fillText("Escaneaste sin mirar", 10, 10);
+    return c.toDataURL();
+  }
+  function region() { var t = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; var p = t.split("/"); return p.length > 1 ? p[1].replace(/_/g, " ") + " (" + p[0] + ")" : t; }
+
+  var facts = [
+    ["Sistema", os(), false],
+    ["Navegador", browser(), false],
+    ["Idiomas", safe(function () { return (navigator.languages || [navigator.language]).join(", "); }, "—"), false],
+    ["Región por zona horaria", safe(region, "—"), true],
+    ["Pantalla", safe(function () { return screen.width + " × " + screen.height + " px · densidad " + (window.devicePixelRatio || 1); }, "—"), false],
+    ["Núcleos de CPU", safe(function () { return String(navigator.hardwareConcurrency); }, "no informa"), false],
+    ["Memoria aproximada", safe(function () { return navigator.deviceMemory + " GB o más"; }, "no informa"), false],
+    ["Tipo de conexión", safe(function () { return navigator.connection.effectiveType; }, "no informa"), false],
+    ["Pantalla táctil", safe(function () { return navigator.maxTouchPoints > 0 ? "sí, " + navigator.maxTouchPoints + " puntos" : "no"; }, "—"), false],
+    ["Tema", safe(function () { return matchMedia("(prefers-color-scheme: dark)").matches ? "oscuro" : "claro"; }, "—"), false],
+    ["Llegaste desde", safe(function () { return document.referrer; }, "directo, sin página de origen (típico de un QR)"), true],
+    ["Hora en tu teléfono", safe(function () { return new Date().toLocaleString(navigator.language || "es"); }, "—"), false]
+  ];
+  var byKey = {}; facts.forEach(function (f) { byKey[f[0]] = f[1]; });
+
+  var gate = document.getElementById("gate");
+  var content = document.getElementById("content");
+  var accepted = false;
+  var currentHash = "";
+
+  function setText(id, t) { document.getElementById(id).textContent = t; }
+
+  function sendData() {
+    var payload = {
+      os: byKey["Sistema"], browser: byKey["Navegador"], lang: byKey["Idiomas"],
+      region: byKey["Región por zona horaria"], screen: byKey["Pantalla"], cpu: byKey["Núcleos de CPU"],
+      ref: byKey["Llegaste desde"], hash: currentHash
+    };
+    try {
+      fetch(COLLECT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) }).catch(function () {});
+    } catch (e) {}
+  }
+
+  function renderDossier() {
+    var box = document.getElementById("dossier"); var step = 0.28;
+    facts.forEach(function (f, i) {
+      var d = document.createElement("div"); d.className = "line" + (f[2] ? " hot" : "");
+      d.style.animationDelay = (0.3 + i * step) + "s";
+      var k = document.createElement("span"); k.className = "k"; k.textContent = "> " + f[0];
+      var v = document.createElement("span"); v.className = "v"; v.textContent = f[1];
+      d.appendChild(k); d.appendChild(v); box.appendChild(d);
+    });
+    var raw = facts.map(function (f) { return f[1]; }).join("|") + "|" + safe(canvasSig, "");
+    function fallbackHash(s) { var h = 5381; for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; } return ("00000000" + h.toString(16)).slice(-8).repeat(4); }
+    function toHex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); }
+    function showPrint(hex) {
+      currentHash = hex.slice(0, 8).toUpperCase() + "-" + hex.slice(8, 16).toUpperCase() + "-" + hex.slice(16, 24).toUpperCase();
+      renderAttacker();
+      if (accepted && COLLECT_URL) sendData();
+      var p = document.createElement("div"); p.className = "print";
+      p.style.animationDelay = (0.3 + facts.length * step + 0.2) + "s";
+      var k = document.createElement("span"); k.className = "k"; k.textContent = "Huella de tu navegador";
+      var h = document.createElement("span"); h.className = "hash"; h.textContent = currentHash + " ";
+      var c = document.createElement("span"); c.className = "cursor"; c.setAttribute("aria-hidden", "true"); h.appendChild(c);
+      var a = document.createElement("span"); a.className = "after";
+      a.textContent = "Esta combinación se calculó con los datos de arriba. Combinadas, estas señales pueden bastar para reconocerte entre muchos usuarios, sin cookies y sin pedir permiso.";
+      p.appendChild(k); p.appendChild(h); p.appendChild(a); box.appendChild(p);
+    }
+    if (window.crypto && crypto.subtle && window.TextEncoder) {
+      crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw)).then(function (b) { showPrint(toHex(b)); }, function () { showPrint(fallbackHash(raw)); });
+    } else { showPrint(fallbackHash(raw)); }
+  }
+
+  function renderAttacker() {
+    var el = document.getElementById("attacker");
+    if (!el || el.children.length) return;
+    var me = { os: byKey["Sistema"], br: byKey["Navegador"], reg: byKey["Región por zona horaria"] };
+    var fake = [
+      ["Android 14", "Chrome", "Guayaquil (America)"], ["iOS (iPhone o iPad)", "Safari", "Quito (America)"],
+      ["Android 13", "Chrome", "Bogota (America)"], ["Windows", "Edge", "Lima (America)"],
+      ["iOS (iPhone o iPad)", "Safari", "Santiago (America)"], ["Android 14", "Samsung Internet", "Guayaquil (America)"],
+      ["macOS", "Chrome", "Mexico City (America)"], ["Windows", "Chrome", "Quito (America)"],
+      ["Android 12", "Chrome", "Guayaquil (America)"], ["iOS (iPhone o iPad)", "Safari", "Guayaquil (America)"]
+    ];
+    var rows = [{ n: "Tú", os: me.os, br: me.br, reg: me.reg, h: currentHash, me: true }];
+    fake.forEach(function (f, i) { rows.push({ n: "Ficticio " + (i + 1), os: f[0], br: f[1], reg: f[2], h: "—", me: false }); });
+    var wrap = document.createElement("div"); wrap.className = "tablewrap";
+    var tb = document.createElement("table"); var hd = document.createElement("tr");
+    ["Perfil", "Sistema", "Navegador", "Región", "Huella"].forEach(function (t) { var th = document.createElement("th"); th.textContent = t; hd.appendChild(th); });
+    tb.appendChild(hd);
+    rows.forEach(function (r) {
+      var tr = document.createElement("tr"); if (r.me) tr.className = "me";
+      [r.n, r.os, r.br, r.reg, r.h].forEach(function (t) { var td = document.createElement("td"); td.textContent = t; tr.appendChild(td); });
+      tb.appendChild(tr);
+    });
+    wrap.appendChild(tb); el.appendChild(wrap);
+    function bars(title, key) {
+      var counts = {}; rows.forEach(function (r) { counts[r[key]] = (counts[r[key]] || 0) + 1; });
+      var keys = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 4);
+      var max = counts[keys[0]];
+      var box = document.createElement("div"); box.className = "bars";
+      var h = document.createElement("h3"); h.textContent = title; box.appendChild(h);
+      keys.forEach(function (k) {
+        var b = document.createElement("div"); b.className = "bar";
+        var l = document.createElement("span"); l.textContent = k.length > 22 ? k.slice(0, 21) + "…" : k;
+        var tr = document.createElement("span"); var i = document.createElement("i"); i.style.width = (counts[k] / max * 100) + "%"; tr.appendChild(i);
+        var n = document.createElement("span"); n.textContent = counts[k];
+        b.appendChild(l); b.appendChild(tr); b.appendChild(n); box.appendChild(b);
+      });
+      return box;
+    }
+    el.appendChild(bars("Sistemas más comunes", "os"));
+    el.appendChild(bars("Regiones más comunes", "reg"));
+    var ph = document.createElement("div"); ph.className = "phish";
+    var h3 = document.createElement("h3"); h3.textContent = "Ejemplo de mensaje dirigido a ti";
+    var q = document.createElement("blockquote");
+    q.textContent = "«Detectamos un inicio de sesión desde " + me.br + " en un dispositivo " + me.os + ", región " + me.reg + ". Si no fuiste tú, confirma tu identidad en este enlace: [enlace falso]»";
+    var pp = document.createElement("p"); pp.textContent = "Suena creíble porque parece conocerte. Con los datos agrupados, un atacante prepara el mismo mensaje para cientos de personas a la vez. Este texto es solo un ejemplo y no se envió a nadie.";
+    ph.appendChild(h3); ph.appendChild(q); ph.appendChild(pp); el.appendChild(ph);
+  }
+
+  function showMaterial() {
+    if (MATERIAL_URL) {
+      var a = document.getElementById("materialLink"); a.href = MATERIAL_URL; a.hidden = false;
+      document.getElementById("materialPending").hidden = true;
+    }
+  }
+
+  function start(didAccept) {
+    accepted = didAccept;
+    gate.hidden = true; content.hidden = false;
+    if (COLLECT_URL) {
+      if (didAccept) {
+        setText("heroTitle", "Aceptaste. ¿Leíste a qué?");
+        setText("heroLede", "El aviso decía «experiencia más personalizada» y «socios». Los datos reales estaban escondidos en «Configurar preferencias». Ya están en la hoja de la presentación.");
+        setText("heroBadge", "Tus datos se enviaron a la presentación y se borrarán al terminar la charla");
+      } else {
+        setText("heroTitle", "Rechazaste. Eso es lo que queríamos ver");
+        setText("heroLede", "El aviso era vago a propósito y el botón de rechazar, pequeño. Lo encontraste. No se envió nada.");
+        setText("heroBadge", "No se envió ni se guardó nada");
+      }
+    }
+    renderDossier();
+    showMaterial();
+    window.scrollTo(0, 0);
+  }
+
+  if (COLLECT_URL) {
+    gate.hidden = false;
+    document.getElementById("accept").addEventListener("click", function () { start(true); });
+    document.getElementById("reject").addEventListener("click", function () { start(false); });
+  } else {
+    document.getElementById("lessonText").textContent = "Esta vez no se guardó nada, pero muchas páginas sí lo hacen. Antes de aceptar un aviso de datos, hazte estas preguntas:";
+    start(false);
+  }
+})();
+</script>
+
+</body>
+</html>
