@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escaneaste sin mirar</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+html { color-scheme: light dark; }
+body { margin: 0; }
+/* Layout: una columna. Arriba el susto, en medio un expediente oscuro que se escribe solo con los datos del propio visitante, luego precauciones y material. */
+:root {
+  --bg: #F3F5FA;
+  --surface: #FFFFFF;
+  --ink: #14213D;
+  --muted: #4A5670;
+  --line: #D9DEEA;
+  --accent: #1D4ED8;
+  --accent-soft: #E4EBFC;
+  --warn: #B4400C;
+  --warn-soft: #FBE9DD;
+  --ok: #0F766E;
+  --ok-soft: #E3F1EC;
+  --term-bg: #0B1020;
+  --term-ink: #CFE3FF;
+  --term-dim: #7F8FB0;
+  --term-hot: #FFB784;
+  --term-ok: #7BE0C8;
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1526; --surface: #17203A; --ink: #EEF1F8; --muted: #A8B3CC; --line: #2A3555;
+    --accent: #8FB0FF; --accent-soft: #1C2B57; --warn: #FFAA7A; --warn-soft: #3A2417;
+    --ok: #6FD3C3; --ok-soft: #12332F; --term-bg: #060A16; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1526; --surface: #17203A; --ink: #EEF1F8; --muted: #A8B3CC; --line: #2A3555;
+  --accent: #8FB0FF; --accent-soft: #1C2B57; --warn: #FFAA7A; --warn-soft: #3A2417;
+  --ok: #6FD3C3; --ok-soft: #12332F; --term-bg: #060A16; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 18px; line-height: 1.55; padding-block: 40px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+h1, h2 { text-wrap: balance; line-height: 1.12; }
+h1 { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 700; }
+p { max-width: 62ch; }
+.eyebrow { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warn); }
+.hero { display: flex; flex-direction: column; gap: 16px; }
+.lede { font-size: 1.25rem; color: var(--muted); }
+.badge { display: inline-block; align-self: flex-start; background: var(--ok-soft); color: var(--ok); font-weight: 700; font-size: 0.95rem; padding: 6px 16px; border-radius: 999px; }
+section { display: flex; flex-direction: column; gap: 16px; }
+
+.dossier { background: var(--term-bg); color: var(--term-ink); border-radius: 18px; padding: 20px 22px 24px; font-family: var(--font-mono); font-size: 0.88rem; line-height: 1.5; display: flex; flex-direction: column; gap: 4px; box-shadow: 0 10px 30px rgba(8, 12, 30, 0.25); }
+.dossier .bar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--term-dim); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; padding-bottom: 12px; border-bottom: 1px solid #1F2A4A; margin-bottom: 8px; }
+.line { display: flex; flex-wrap: wrap; gap: 2px 14px; padding: 6px 0; opacity: 0; transform: translateY(4px); animation: show 0.35s ease forwards; }
+.line .k { color: var(--term-dim); flex: 0 0 11.5em; min-width: 0; }
+.line .v { color: var(--term-ink); font-weight: 600; flex: 1 1 12em; min-width: 0; overflow-wrap: anywhere; }
+.line.hot .v { color: var(--term-hot); }
+.print { margin-top: 10px; padding-top: 14px; border-top: 1px dashed #26335A; display: flex; flex-direction: column; gap: 6px; opacity: 0; animation: show 0.5s ease forwards; }
+.print .k { color: var(--term-dim); font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.print .hash { color: var(--term-ok); font-size: 1.15rem; font-weight: 600; letter-spacing: 0.06em; overflow-wrap: anywhere; }
+.print .after { color: var(--term-ink); font-family: var(--font-body); font-size: 0.98rem; }
+.cursor { display: inline-block; width: 0.6em; height: 1.05em; background: var(--term-ok); vertical-align: text-bottom; animation: blink 1s steps(2) infinite; }
+@keyframes show { to { opacity: 1; transform: none; } }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .line, .print { animation-duration: 0.01s; animation-delay: 0s !important; }
+  .cursor { animation: none; }
+}
+.note { color: var(--muted); font-size: 0.95rem; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+.card { background: var(--warn-soft); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card h3 { font-size: 1.05rem; line-height: 1.25; }
+.card p { font-size: 0.97rem; color: var(--muted); }
+.checks { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.checks li { display: flex; gap: 14px; align-items: flex-start; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 18px; }
+.checks input { margin-top: 5px; width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+.checks label { cursor: pointer; min-width: 0; }
+.checks b { display: block; }
+.checks span { color: var(--muted); font-size: 0.95rem; }
+.material { background: var(--accent-soft); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.btn { display: inline-block; align-self: flex-start; background: var(--accent); color: var(--bg); font-weight: 700; text-decoration: none; padding: 14px 26px; border-radius: 12px; }
+.btn:focus-visible, input:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.pending { background: var(--surface); border: 1px dashed var(--muted); border-radius: 12px; padding: 14px 18px; color: var(--muted); font-size: 0.95rem; }
+</style>
+
+</head>
+<body>
+<main>
+  <header class="hero">
+    <p class="eyebrow">Demostración</p>
+    <h1>Acabas de escanear un código sin saber a dónde iba</h1>
+    <p class="lede">Sin permiso, sin formulario y sin que toques nada, esta página ya sabe esto de ti.</p>
+    <p class="badge">Se calcula en tu teléfono. No se guarda ni se envía nada</p>
+  </header>
+
+  <section aria-labelledby="vio">
+    <h2 id="vio">Tu expediente</h2>
+    <div class="dossier" id="dossier" aria-live="polite">
+      <div class="bar"><span>Expediente de visitante</span><span id="stamp">generado ahora</span></div>
+    </div>
+    <p class="note">Cualquier sitio que abras puede leer estos datos. Un servidor además ve tu dirección IP, que esta página no puede mostrarte ni usa.</p>
+  </section>
+
+  <section aria-labelledby="podria">
+    <h2 id="podria">Lo que una página maliciosa habría podido hacer</h2>
+    <div class="cards">
+      <div class="card"><h3>Mostrar un formulario falso</h3><p>Una pantalla que imita un inicio de sesión para quedarse con tu usuario y tu clave.</p></div>
+      <div class="card"><h3>Pedirte que instales algo</h3><p>Una aplicación o un archivo «necesario» que en realidad espía o bloquea tu equipo.</p></div>
+      <div class="card"><h3>Redirigirte en silencio</h3><p>Llevarte a otra dirección que parece la de un servicio conocido y pedirte un pago o un código.</p></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="antes">
+    <h2 id="antes">Antes de escanear un QR</h2>
+    <ul class="checks">
+      <li><input type="checkbox" id="c1"><label for="c1"><b>Mira la dirección antes de abrir</b><span>Casi todas las cámaras muestran el enlace. Léelo completo, no solo el principio.</span></label></li>
+      <li><input type="checkbox" id="c2"><label for="c2"><b>Desconfía de un QR pegado sobre otro</b><span>Los carteles y los menús son fáciles de tapar con un adhesivo.</span></label></li>
+      <li><input type="checkbox" id="c3"><label for="c3"><b>No escribas claves ni datos de pago al entrar por un QR</b><span>Si el servicio es real, entra desde su aplicación o su dirección oficial.</span></label></li>
+      <li><input type="checkbox" id="c4"><label for="c4"><b>No instales nada que te pida una página</b><span>Descarga aplicaciones solo desde la tienda oficial de tu teléfono.</span></label></li>
+      <li><input type="checkbox" id="c5"><label for="c5"><b>Si dudas, pregunta a quien lo compartió</b><span>Confirma por otro canal que el código es suyo.</span></label></li>
+    </ul>
+  </section>
+
+  <section class="material" aria-labelledby="mat">
+    <h2 id="mat">Material de la charla</h2>
+    <p>Documentos de la maestría y la hoja de ruta para empezar en ciberseguridad.</p>
+    <a class="btn" id="materialLink" href="#" target="_blank" rel="noopener" hidden>Abrir el material</a>
+    <p class="pending" id="materialPending">El enlace al material todavía no está configurado.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  // Pega aquí el enlace de Drive con los documentos. Si queda vacío, se muestra el aviso.
+  var MATERIAL_URL = "";
+
+  function safe(fn, fallback) { try { var v = fn(); return v == null || v === "" ? fallback : v; } catch (e) { return fallback; } }
+  var ua = navigator.userAgent || "";
+
+  function os() {
+    if (/iPhone|iPad|iPod/i.test(ua)) return "iOS (iPhone o iPad)";
+    if (/Android/i.test(ua)) { var m = ua.match(/Android\s([\d.]+)/); return "Android" + (m ? " " + m[1] : ""); }
+    if (/Macintosh/i.test(ua)) return "macOS";
+    if (/Windows/i.test(ua)) return "Windows";
+    if (/Linux/i.test(ua)) return "Linux";
+    return "No identificado";
+  }
+  function browser() {
+    if (/EdgA?\//.test(ua)) return "Edge";
+    if (/OPR\//.test(ua)) return "Opera";
+    if (/SamsungBrowser/.test(ua)) return "Samsung Internet";
+    if (/Firefox|FxiOS/.test(ua)) return "Firefox";
+    if (/CriOS|Chrome/.test(ua)) return "Chrome";
+    if (/Safari/.test(ua)) return "Safari";
+    return "No identificado";
+  }
+  function canvasSig() {
+    var c = document.createElement("canvas"); c.width = 220; c.height = 40;
+    var x = c.getContext("2d");
+    x.textBaseline = "top"; x.font = "16px Arial"; x.fillStyle = "#f60"; x.fillRect(4, 4, 80, 24);
+    x.fillStyle = "#069"; x.fillText("Escaneaste sin mirar", 8, 8);
+    x.fillStyle = "rgba(102,204,0,0.6)"; x.fillText("Escaneaste sin mirar", 10, 10);
+    return c.toDataURL();
+  }
+  function tz() { return Intl.DateTimeFormat().resolvedOptions().timeZone; }
+  function region() { var t = tz() || ""; var p = t.split("/"); return p.length > 1 ? p[1].replace(/_/g, " ") + " (" + p[0] + ")" : t; }
+
+  var facts = [
+    ["Sistema", os(), false],
+    ["Navegador", browser(), false],
+    ["Idiomas", safe(function () { return (navigator.languages || [navigator.language]).join(", "); }, "—"), false],
+    ["Región por zona horaria", safe(region, "—"), true],
+    ["Pantalla", safe(function () { return screen.width + " × " + screen.height + " px · densidad " + (window.devicePixelRatio || 1); }, "—"), false],
+    ["Núcleos de CPU", safe(function () { return String(navigator.hardwareConcurrency); }, "no informa"), false],
+    ["Memoria aproximada", safe(function () { return navigator.deviceMemory + " GB o más"; }, "no informa"), false],
+    ["Tipo de conexión", safe(function () { return navigator.connection.effectiveType; }, "no informa"), false],
+    ["Pantalla táctil", safe(function () { return navigator.maxTouchPoints > 0 ? "sí, " + navigator.maxTouchPoints + " puntos" : "no"; }, "—"), false],
+    ["Tema", safe(function () { return matchMedia("(prefers-color-scheme: dark)").matches ? "oscuro" : "claro"; }, "—"), false],
+    ["Llegaste desde", safe(function () { return document.referrer; }, "directo, sin página de origen (típico de un QR)"), true],
+    ["Hora en tu teléfono", safe(function () { return new Date().toLocaleString(navigator.language || "es"); }, "—"), false]
+  ];
+
+  var box = document.getElementById("dossier");
+  var step = 0.28;
+  facts.forEach(function (f, i) {
+    var d = document.createElement("div");
+    d.className = "line" + (f[2] ? " hot" : "");
+    d.style.animationDelay = (0.3 + i * step) + "s";
+    var k = document.createElement("span"); k.className = "k"; k.textContent = "> " + f[0];
+    var v = document.createElement("span"); v.className = "v"; v.textContent = f[1];
+    d.appendChild(k); d.appendChild(v); box.appendChild(d);
+  });
+
+  var rawTraits = facts.map(function (f) { return f[1]; }).join("|") + "|" + safe(canvasSig, "");
+  function fallbackHash(s) { var h = 5381; for (var i = 0; i < s.length; i++) { h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; } return ("00000000" + h.toString(16)).slice(-8).repeat(4); }
+  function toHex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ("0" + b.toString(16)).slice(-2); }).join(""); }
+  function showPrint(hex) {
+    var p = document.createElement("div"); p.className = "print";
+    p.style.animationDelay = (0.3 + facts.length * step + 0.2) + "s";
+    var k = document.createElement("span"); k.className = "k"; k.textContent = "Huella de tu navegador";
+    var h = document.createElement("span"); h.className = "hash";
+    h.textContent = hex.slice(0, 8).toUpperCase() + "-" + hex.slice(8, 16).toUpperCase() + "-" + hex.slice(16, 24).toUpperCase();
+    var c = document.createElement("span"); c.className = "cursor"; c.setAttribute("aria-hidden", "true");
+    h.appendChild(document.createTextNode(" ")); h.appendChild(c);
+    var a = document.createElement("span"); a.className = "after";
+    a.textContent = "Esta combinación se calculó con los datos de arriba y no se guardó. Combinadas, estas señales pueden bastar para reconocerte entre muchos usuarios, sin cookies y sin pedir permiso.";
+    p.appendChild(k); p.appendChild(h); p.appendChild(a); box.appendChild(p);
+  }
+  if (window.crypto && crypto.subtle && window.TextEncoder) {
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(rawTraits)).then(function (b) { showPrint(toHex(b)); }, function () { showPrint(fallbackHash(rawTraits)); });
+  } else { showPrint(fallbackHash(rawTraits)); }
+
+  if (MATERIAL_URL) {
+    var a = document.getElementById("materialLink");
+    a.href = MATERIAL_URL; a.hidden = false;
+    document.getElementById("materialPending").hidden = true;
+  }
+})();
+</script>
+</body>
+</html>
